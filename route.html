@@ -1,90 +1,66 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Маршрут на Яндекс.Картах</title>
-    <!-- Подключаем API Яндекс.Карт с вашим ключом -->
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=ffa3ea6c-3972-48b1-8878-7e3d9c03384a&lang=ru_RU" type="text/javascript"></script>
+    <title>Маршрут</title>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=ВАШ_НОВЫЙ_КЛЮЧ&lang=ru_RU"></script>
     <style>
-        html, body, #map {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
+        html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; }
         #info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            z-index: 1000;
-            pointer-events: none;
+            position: absolute; bottom: 20px; left: 20px;
+            background: white; padding: 10px 20px;
+            border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: Arial; font-size: 14px; z-index: 1000;
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <div id="info">Загрузка маршрута...</div>
+    <div id="info">Загрузка...</div>
 
-    <script type="text/javascript">
-        // Функция для получения параметров из URL
+    <script>
         function getParam(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
+            return new URLSearchParams(window.location.search).get(name);
         }
 
-        ymaps.ready(function () {
-            // Читаем координаты из параметров URL
-            const lat1 = parseFloat(getParam('lat1')) || 55.76;
-            const lon1 = parseFloat(getParam('lon1')) || 37.64;
-            const lat2 = parseFloat(getParam('lat2')) || 55.45;
-            const lon2 = parseFloat(getParam('lon2')) || 37.36;
+        ymaps.ready(function() {
+            var lat1 = parseFloat(getParam('lat1')) || 55.76;
+            var lon1 = parseFloat(getParam('lon1')) || 37.64;
+            var lat2 = parseFloat(getParam('lat2')) || 55.45;
+            var lon2 = parseFloat(getParam('lon2')) || 37.36;
 
-            // Создаём карту
-            const centerLat = (lat1 + lat2) / 2;
-            const centerLon = (lon1 + lon2) / 2;
-            const myMap = new ymaps.Map('map', {
-                center: [centerLat, centerLon],
+            var map = new ymaps.Map('map', {
+                center: [(lat1+lat2)/2, (lon1+lon2)/2],
                 zoom: 10,
-                controls: ['zoomControl', 'fullscreenControl']
+                controls: ['zoomControl']
             });
 
-            // Создаём мультимаршрут
-            const multiRoute = new ymaps.multiRouter.MultiRoute({
+            var route = new ymaps.multiRouter.MultiRoute({
                 referencePoints: [
                     [lat1, lon1],
                     [lat2, lon2]
                 ],
-                params: {
-                    routingMode: 'auto'
-                }
+                params: { routingMode: 'auto' }
             }, {
                 boundsAutoApply: true,
                 editorDraw: false
             });
 
-            myMap.geoObjects.add(multiRoute);
+            map.geoObjects.add(route);
 
-            // Показываем расстояние и время после построения маршрута
-            multiRoute.model.events.add('requestsuccess', function () {
-                const activeRoute = multiRoute.getActiveRoute();
+            route.model.events.add('requestsuccess', function() {
+                var activeRoute = route.getActiveRoute();
                 if (activeRoute) {
-                    const distance = activeRoute.properties.get('distance').text;
-                    const duration = activeRoute.properties.get('duration').text;
+                    var distance = activeRoute.properties.get('distance').text;
+                    var duration = activeRoute.properties.get('duration').text;
                     document.getElementById('info').innerHTML =
-                        `🚗 <b>Расстояние:</b> ${distance} &nbsp;|&nbsp; ⏱️ <b>Время:</b> ${duration}`;
+                        '🚗 Расстояние: ' + distance + ' | ⏱️ Время: ' + duration;
                 }
             });
 
-            multiRoute.model.events.add('requestfail', function () {
+            route.model.events.add('requestfail', function() {
                 document.getElementById('info').innerHTML =
-                    '❌ Не удалось построить маршрут. Проверьте координаты.';
+                    '❌ Ошибка: не удалось построить маршрут. Проверьте координаты.';
             });
         });
     </script>
